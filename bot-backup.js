@@ -1734,7 +1734,7 @@ async function createTest(word, testType, otherWords) {
 
 // Start automatic cleanup system
 console.log('🚀 Starting Farsi-Dutch Bot...');
-startAutoCleanup(bot);
-console.log('✅ Auto-cleanup system activated');
+// startAutoCleanup(bot); // DISABLED: Keep all user data permanently
+// console.log('✅ Auto-cleanup system activated');
 
 module.exports = bot;

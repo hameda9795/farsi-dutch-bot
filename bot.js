@@ -2032,8 +2032,8 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Start automatic cleanup system
 console.log('🚀 Starting Farsi-Dutch Bot...');
-startAutoCleanup(bot);
-console.log('✅ Auto-cleanup system activated');
+// startAutoCleanup(bot); // DISABLED: Keep all user data permanently
+// console.log('✅ Auto-cleanup system activated');
 
 // Start automatic content generation system
 startContentGeneration();
