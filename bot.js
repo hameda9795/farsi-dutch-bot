@@ -31,7 +31,7 @@ const {
 } = require('./utils/messageFormatter');
 
 // Import State module for saving translations
-const { loadState, saveState, addWord, addWordsFromExtraction, getRandomWords, setCurrentTest, updateTestScore, clearCurrentTest, getVocabularyStats, getNextTestWord, getWordsForOptions, startTestSession, endTestSession } = require('./lib/state');
+const { loadState, saveState, addWord, addWordsFromExtraction, getRandomWords, setCurrentTest, updateTestScore, clearCurrentTest, getVocabularyStats, getNextTestWord, getWordsForOptions, startTestSession, endTestSession, markWordAsImportant, unmarkWordAsImportant, getImportantWords, isWordImportant } = require('./lib/state');
 
 // Environment variables validation
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -157,6 +157,24 @@ async function safeEditMessage(chatId, messageId, text, options = {}) {
 }
 
 /**
+ * Safe edit message reply markup with error handling
+ * @param {number} chatId - Chat ID
+ * @param {number} messageId - Message ID
+ * @param {Object} replyMarkup - Reply markup object
+ */
+async function safeEditMessageReplyMarkup(chatId, messageId, replyMarkup) {
+    try {
+        return await bot.editMessageReplyMarkup(replyMarkup, { 
+            chat_id: chatId, 
+            message_id: messageId 
+        });
+    } catch (error) {
+        console.log('⚠️  Failed to edit message reply markup:', error.message);
+        // Don't throw error, just log it - the message content is still there
+    }
+}
+
+/**
  * Handle user who lost membership
  * @param {number} chatId - Chat ID
  * @param {number} userId - User ID
@@ -244,6 +262,7 @@ const BUTTON_TEXTS = {
     GRAMMAR: '📝 اصلاح گرامر',
     TEST: '📝 تست',
     STATS: '📊 آمار من',
+    IMPORTANT_WORDS: '⭐ کلمات نشان شده',
     EXIT_TEST: '🚪 خروج از تست',
     NEXT_TEST: '⏭️ سوال بعدی'
 };
@@ -259,6 +278,9 @@ const mainKeyboard = {
             [
                 { text: BUTTON_TEXTS.TEST },
                 { text: BUTTON_TEXTS.STATS }
+            ],
+            [
+                { text: BUTTON_TEXTS.IMPORTANT_WORDS }
             ]
         ],
         resize_keyboard: true,
@@ -722,6 +744,40 @@ bot.on('message', async (msg) => {
         return;
     }
     
+    if (userInput === BUTTON_TEXTS.IMPORTANT_WORDS) {
+        // Show user's important words
+        try {
+            const importantWords = await getImportantWords(chatId);
+            
+            if (importantWords.length === 0) {
+                bot.sendMessage(chatId, '⭐ **کلمات نشان شده**\n\n📚 هنوز کلمه‌ای نشان نکرده‌اید.\n\n💡 **راهنمایی:** هنگام تست، روی کلماتی که مهم هستند کلیک کنید تا نشان شوند.', {
+                    parse_mode: 'Markdown',
+                    ...mainKeyboard
+                });
+            } else {
+                let message = '⭐ **کلمات نشان شده شما:**\n\n';
+                
+                importantWords.forEach((word, index) => {
+                    message += `${index + 1}. **${word.dutch}** ← ${word.farsi}\n`;
+                });
+                
+                message += `\n📊 تعداد: ${importantWords.length} کلمه`;
+                
+                bot.sendMessage(chatId, message, {
+                    parse_mode: 'Markdown',
+                    ...mainKeyboard
+                });
+            }
+        } catch (error) {
+            console.error('Important words error:', error);
+            bot.sendMessage(chatId, '❌ خطایی در نمایش کلمات نشان شده پیش آمد.', {
+                parse_mode: 'Markdown',
+                ...mainKeyboard
+            });
+        }
+        return;
+    }
+    
     if (userInput === BUTTON_TEXTS.EXIT_TEST) {
         // End test session and return to main menu
         try {
@@ -1032,23 +1088,10 @@ bot.on('callback_query', async (callbackQuery) => {
                 const selectedOption = state.currentTest.options[selectedIndex];
                 const testResult = await handleTestCallbackAnswer(chatId, selectedOption, state.currentTest);
                 
-                // Edit the message to show result
-                await safeEditMessage(chatId, callbackQuery.message.message_id, testResult, {
-                    parse_mode: 'Markdown'
-                });
-                
-                // Send follow-up message with keyboard and option for next test
-                const nextTestKeyboard = {
-                    reply_markup: {
-                        inline_keyboard: [
-                            [{ text: '🔄 تست بعدی', callback_data: 'start_new_test' }]
-                        ]
-                    }
-                };
-                
-                await bot.sendMessage(chatId, '🎯 آماده تست بعدی هستی؟', {
+                // Edit the message to show result with new keyboard
+                await safeEditMessage(chatId, callbackQuery.message.message_id, testResult.text, {
                     parse_mode: 'Markdown',
-                    ...nextTestKeyboard
+                    reply_markup: testResult.reply_markup
                 });
             } else {
                 await bot.sendMessage(chatId, 'این تست منقضی شده. لطفاً تست جدید شروع کنید.', {
@@ -1133,6 +1176,89 @@ bot.on('callback_query', async (callbackQuery) => {
                 await bot.sendMessage(chatId, 'خطایی در ساخت تست پیش آمد. لطفاً دوباره تلاش کنید.', {
                     parse_mode: 'Markdown',
                     ...mainKeyboard
+                });
+            }
+        }
+        
+        // Handle word marking request
+        if (data.startsWith('mark_word_')) {
+            const wordId = data.replace('mark_word_', '');
+            
+            try {
+                const state = await loadState(chatId);
+                const word = state.words.find(w => w.id === wordId);
+                
+                if (word) {
+                    const isAlreadyMarked = await isWordImportant(chatId, wordId);
+                    
+                    if (isAlreadyMarked) {
+                        await unmarkWordAsImportant(chatId, wordId);
+                        
+                        // Update button text to show unmarked state
+                        const updatedKeyboard = {
+                            inline_keyboard: [
+                                [
+                                    {
+                                        text: '⭐ نشان کردن کلمه',
+                                        callback_data: `mark_word_${wordId}`
+                                    }
+                                ],
+                                [
+                                    {
+                                        text: '🔄 آماده تست بعدی؟',
+                                        callback_data: 'start_new_test'
+                                    }
+                                ]
+                            ]
+                        };
+                        
+                        // Update the message with new button text
+                        await safeEditMessageReplyMarkup(chatId, callbackQuery.message.message_id, updatedKeyboard);
+                        
+                        await bot.answerCallbackQuery(callbackQuery.id, {
+                            text: `✅ کلمه "${word.dutch}" از کلمات نشان شده حذف شد`,
+                            show_alert: true
+                        });
+                    } else {
+                        await markWordAsImportant(chatId, wordId);
+                        
+                        // Update button text to show marked state
+                        const updatedKeyboard = {
+                            inline_keyboard: [
+                                [
+                                    {
+                                        text: '⭐ نشان شد',
+                                        callback_data: `mark_word_${wordId}`
+                                    }
+                                ],
+                                [
+                                    {
+                                        text: '🔄 آماده تست بعدی؟',
+                                        callback_data: 'start_new_test'
+                                    }
+                                ]
+                            ]
+                        };
+                        
+                        // Update the message with new button text
+                        await safeEditMessageReplyMarkup(chatId, callbackQuery.message.message_id, updatedKeyboard);
+                        
+                        await bot.answerCallbackQuery(callbackQuery.id, {
+                            text: `⭐ کلمه "${word.dutch}" نشان شد و به لیست کلمات مهم اضافه شد`,
+                            show_alert: true
+                        });
+                    }
+                } else {
+                    await bot.answerCallbackQuery(callbackQuery.id, {
+                        text: '❌ کلمه مورد نظر یافت نشد',
+                        show_alert: true
+                    });
+                }
+            } catch (error) {
+                console.error('Mark word error:', error);
+                await bot.answerCallbackQuery(callbackQuery.id, {
+                    text: '❌ خطا در نشان کردن کلمه',
+                    show_alert: true
                 });
             }
         }
@@ -1500,7 +1626,10 @@ async function handleTestMode(chatId, userId) {
         // Save current test to state
         await setCurrentTest(chatId, test);
         
-        return formatSingleTestResponse(test);
+        // Check if the word is already marked as important
+        const isWordMarked = await isWordImportant(chatId, test.wordId);
+        
+        return formatSingleTestResponse(test, isWordMarked);
         
     } catch (error) {
         console.error('Error generating tests:', error);
@@ -1560,6 +1689,7 @@ async function generateWordTest(chatId) {
     const test = {
         id: Math.random().toString(36).substr(2, 9),
         type: testType,
+        wordId: questionWord.id, // Add wordId for marking functionality
         question: '',
         correctAnswer: '',
         options: [],
@@ -1699,7 +1829,7 @@ async function createDiverseTest(testType, sourceData, allData) {
  * @param {string} chatId - Chat ID
  * @param {string} selectedOption - Selected option
  * @param {object} currentTest - Current test data
- * @returns {Promise<string>} - Response message
+ * @returns {Promise<object>} - Response object with text and keyboard
  */
 async function handleTestCallbackAnswer(chatId, selectedOption, currentTest) {
     const isCorrect = selectedOption === currentTest.correctAnswer;
@@ -1748,10 +1878,39 @@ async function handleTestCallbackAnswer(chatId, selectedOption, currentTest) {
     response += `💡 ${currentTest.explanation}\n\n`;
     response += `📊 **امتیاز شما:** ${scoreData.score} از ${scoreData.total}`;
     
+    // Create keyboard with word marking button and next test button
+    const keyboard = {
+        inline_keyboard: []
+    };
+    
+    // Add word marking button if wordId is available
+    if (currentTest.wordId) {
+        const isWordMarked = await isWordImportant(chatId, currentTest.wordId);
+        const markButtonText = isWordMarked ? '⭐ حذف نشان' : '⭐ نشان کردن کلمه';
+        
+        keyboard.inline_keyboard.push([
+            {
+                text: markButtonText,
+                callback_data: `mark_word_${currentTest.wordId}`
+            }
+        ]);
+    }
+    
+    // Add next test button
+    keyboard.inline_keyboard.push([
+        {
+            text: '🔄 آماده تست بعدی؟',
+            callback_data: 'start_new_test'
+        }
+    ]);
+    
     // Clear current test
     await clearCurrentTest(chatId);
     
-    return response;
+    return {
+        text: response,
+        reply_markup: keyboard
+    };
 }
 
 /**
@@ -1787,7 +1946,8 @@ async function handleTestAnswer(chatId, userAnswer, currentTest) {
         return 'لطفاً یکی از گزینه‌های آ، ب، یا ج را انتخاب کنید.';
     }
     
-    return await handleTestCallbackAnswer(chatId, selectedOption, currentTest);
+    const result = await handleTestCallbackAnswer(chatId, selectedOption, currentTest);
+    return result.text; // Return only text for legacy compatibility
 }
 
 /**

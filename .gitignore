@@ -15,9 +15,19 @@ coverage/
 *.tar.gz
 .cache/
 
-# Database files (user data)
-# db/
-# *.json
+# Database files (user data) - DO NOT COMMIT TO AVOID DATA LOSS
+db/
+*.json
+
+# Test files - not needed in production
+test-*.js
+*-test.js
+test.html
+
+# Development and documentation files
+IMPLEMENTATION_SUMMARY.md
+IMPORTANT_WORDS_SYSTEM.md
+*.copilotmd
 
 # Temporary files
 tmp/

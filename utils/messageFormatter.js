@@ -272,9 +272,10 @@ function formatGrammarResponse(correctionData, language) {
 /**
  * Format single interactive test response with inline keyboard
  * @param {object} test - Single test object
+ * @param {boolean} isWordMarked - Whether the word is already marked as important
  * @returns {object} - Message object with text and inline keyboard
  */
-function formatSingleTestResponse(test) {
+function formatSingleTestResponse(test, isWordMarked = false) {
     // Determine test category for display
     let categoryIcon = '';
     let categoryText = '';
@@ -310,7 +311,9 @@ function formatSingleTestResponse(test) {
         }]);
     });
 
-    // Add test control buttons at the bottom
+    // Add word marking button if wordId is available
+    // Note: This will be shown after test answer, not during test
+    
     keyboard.inline_keyboard.push([
         {
             text: '⏭️ سوال بعدی',
