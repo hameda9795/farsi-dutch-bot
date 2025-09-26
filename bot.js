@@ -26,7 +26,7 @@ const {
 } = require('./utils/messageFormatter');
 
 // Import State module for saving translations
-const { loadState, saveState, addWord, addWordsFromExtraction, getRandomWords, setCurrentTest, updateTestScore, clearCurrentTest, getVocabularyStats } = require('./lib/state');
+const { loadState, saveState, addWord, addWordsFromExtraction, getRandomWords, setCurrentTest, updateTestScore, clearCurrentTest, getVocabularyStats, getNextTestWord, getWordsForOptions, startTestSession, endTestSession } = require('./lib/state');
 
 // Environment variables validation
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -238,7 +238,9 @@ const BUTTON_TEXTS = {
     TRANSLATE: '🌐 ترجمه',
     GRAMMAR: '📝 اصلاح گرامر',
     TEST: '📝 تست',
-    STATS: '📊 آمار من'
+    STATS: '📊 آمار من',
+    EXIT_TEST: '🚪 خروج از تست',
+    NEXT_TEST: '⏭️ سوال بعدی'
 };
 
 // Persistent reply keyboard configuration
@@ -708,6 +710,51 @@ bot.on('message', async (msg) => {
         } catch (error) {
             console.error('Stats error:', error);
             bot.sendMessage(chatId, 'خطایی در نمایش آمار پیش آمد.', {
+                parse_mode: 'Markdown',
+                ...mainKeyboard
+            });
+        }
+        return;
+    }
+    
+    if (userInput === BUTTON_TEXTS.EXIT_TEST) {
+        // End test session and return to main menu
+        try {
+            await endTestSession(chatId);
+            await clearCurrentTest(chatId);
+            bot.sendMessage(chatId, '🚪 **از تست خارج شدید**\n\n🏠 به منو اصلی برگشتید.', {
+                parse_mode: 'Markdown',
+                ...mainKeyboard
+            });
+        } catch (error) {
+            console.error('Exit test error:', error);
+            bot.sendMessage(chatId, '❌ خطایی در خروج از تست پیش آمد.', {
+                parse_mode: 'Markdown', 
+                ...mainKeyboard
+            });
+        }
+        return;
+    }
+    
+    if (userInput === BUTTON_TEXTS.NEXT_TEST) {
+        // Generate next test question
+        try {
+            const testResponse = await handleTestMode(chatId, userId);
+            
+            if (typeof testResponse === 'object' && testResponse.reply_markup) {
+                await bot.sendMessage(chatId, testResponse.text, {
+                    parse_mode: 'Markdown',
+                    reply_markup: testResponse.reply_markup
+                });
+            } else {
+                await bot.sendMessage(chatId, testResponse, { 
+                    parse_mode: 'Markdown',
+                    ...mainKeyboard 
+                });
+            }
+        } catch (error) {
+            console.error('Next test error:', error);
+            bot.sendMessage(chatId, '❌ خطایی در ساخت سوال بعدی پیش آمد.', {
                 parse_mode: 'Markdown',
                 ...mainKeyboard
             });
@@ -1385,7 +1432,7 @@ async function handleTestMode(chatId, userId) {
         }
         
         // Generate a simple word test from available vocabulary
-        const test = await generateWordTest(state.words);
+        const test = await generateWordTest(chatId);
         if (!test) {
             return 'خطایی در ساخت تست پیش آمد. لطفاً دوباره تلاش کنید.';
         }
@@ -1420,28 +1467,36 @@ console.log('🛑 Press Ctrl+C to stop');
 
 /**
  * Generate a simple word test from user's vocabulary
- * Only 2 test types: Dutch→Persian and Persian→Dutch
- * @param {Array} words - User's word vocabulary
+ * Uses smart word selection: newest, middle, oldest pattern
+ * Avoids repetition during active session
+ * @param {string} chatId - Chat ID for session management
  * @returns {Promise<object>} - Single test object
  */
-async function generateWordTest(words) {
-    if (!words || words.length < 3) {
+async function generateWordTest(chatId) {
+    // Get next word using smart selection
+    const questionWord = await getNextTestWord(chatId);
+    
+    if (!questionWord) {
         return null;
     }
+
+    // Get other words for wrong options
+    const otherWords = await getWordsForOptions(chatId, questionWord.id, 2);
     
+    if (otherWords.length < 2) {
+        // Not enough words for options
+        return null;
+    }
+
     // Only 2 test types for words
     const testTypes = [
         'dutch_to_farsi',    // معنی کلمه هلندی (گزینه‌ها به فارسی)
         'farsi_to_dutch'     // معادل هلندی کلمه فارسی (گزینه‌ها به هلندی)
     ];
-    
+
     // Randomly pick a test type
     const testType = testTypes[Math.floor(Math.random() * testTypes.length)];
-    
-    // Shuffle words and pick one for the question
-    const shuffledWords = [...words].sort(() => Math.random() - 0.5);
-    const questionWord = shuffledWords[0];
-    
+
     const test = {
         id: Math.random().toString(36).substr(2, 9),
         type: testType,
@@ -1450,18 +1505,11 @@ async function generateWordTest(words) {
         options: [],
         explanation: ''
     };
-    
+
     // Generate wrong options from other words
-    const wrongOptions = shuffledWords
-        .slice(1) // Skip the question word
-        .slice(0, 2) // Take only 2 wrong options
+    const wrongOptions = otherWords
         .map(word => testType === 'dutch_to_farsi' ? word.farsi : word.dutch);
-    
-    if (wrongOptions.length < 2) {
-        // Not enough words for options
-        return null;
-    }
-    
+
     if (testType === 'dutch_to_farsi') {
         test.question = `معنی کلمه «${questionWord.dutch}» چیست؟`;
         test.correctAnswer = questionWord.farsi;
@@ -1471,10 +1519,10 @@ async function generateWordTest(words) {
         test.correctAnswer = questionWord.dutch;
         test.explanation = `کلمه «${questionWord.farsi}» به هلندی «${questionWord.dutch}» است.`;
     }
-    
+
     // Mix correct answer with wrong options and shuffle
     test.options = [test.correctAnswer, ...wrongOptions].sort(() => Math.random() - 0.5);
-    
+
     return test;
 }
 

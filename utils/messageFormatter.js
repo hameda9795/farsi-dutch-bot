@@ -309,6 +309,18 @@ function formatSingleTestResponse(test) {
             callback_data: `test_answer_${index}_${test.id}`
         }]);
     });
+
+    // Add test control buttons at the bottom
+    keyboard.inline_keyboard.push([
+        {
+            text: '⏭️ سوال بعدی',
+            callback_data: 'next_test'
+        },
+        {
+            text: '🚪 خروج از تست',  
+            callback_data: 'exit_test'
+        }
+    ]);
     
     return {
         text: message,
