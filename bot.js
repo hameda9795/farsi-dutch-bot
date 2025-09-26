@@ -3,7 +3,12 @@
  * Main bot file that handles all interactions
  */
 
-require('dotenv').config();
+// Load environment variables based on NODE_ENV
+if (process.env.NODE_ENV === 'test') {
+    require('dotenv').config({ path: '.env.test' });
+} else {
+    require('dotenv').config();
+}
 const TelegramBot = require('node-telegram-bot-api');
 const ClaudeService = require('./services/claudeService');
 const config = require('./config');
@@ -1047,6 +1052,61 @@ bot.on('callback_query', async (callbackQuery) => {
                 });
             } else {
                 await bot.sendMessage(chatId, 'این تست منقضی شده. لطفاً تست جدید شروع کنید.', {
+                    parse_mode: 'Markdown',
+                    ...mainKeyboard
+                });
+            }
+        }
+        
+        // Handle next test request from inline button
+        if (data === 'next_test') {
+            try {
+                const testResponse = await handleTestMode(chatId, userId);
+                if (typeof testResponse === 'object' && testResponse.reply_markup) {
+                    // Edit current message with new test
+                    await safeEditMessage(chatId, callbackQuery.message.message_id, testResponse.text, {
+                        parse_mode: 'Markdown',
+                        reply_markup: testResponse.reply_markup
+                    });
+                } else {
+                    // Edit message and send main keyboard
+                    await safeEditMessage(chatId, callbackQuery.message.message_id, testResponse, {
+                        parse_mode: 'Markdown'
+                    });
+                    
+                    await bot.sendMessage(chatId, '🏠 برگشت به منوی اصلی:', {
+                        parse_mode: 'Markdown',
+                        ...mainKeyboard
+                    });
+                }
+            } catch (error) {
+                console.error('Next test error:', error);
+                await bot.sendMessage(chatId, '❌ خطایی در ساخت سوال بعدی پیش آمد.', {
+                    parse_mode: 'Markdown',
+                    ...mainKeyboard
+                });
+            }
+        }
+        
+        // Handle exit test request from inline button
+        if (data === 'exit_test') {
+            try {
+                await endTestSession(chatId);
+                await clearCurrentTest(chatId);
+                
+                // Edit current message
+                await safeEditMessage(chatId, callbackQuery.message.message_id, '🚪 **از تست خارج شدید**\n\n🏠 به منو اصلی برگشتید.', {
+                    parse_mode: 'Markdown'
+                });
+                
+                // Send main keyboard
+                await bot.sendMessage(chatId, '💡 می‌توانید دوباره تست شروع کنید یا از امکانات دیگر استفاده کنید:', {
+                    parse_mode: 'Markdown',
+                    ...mainKeyboard
+                });
+            } catch (error) {
+                console.error('Exit test error:', error);
+                await bot.sendMessage(chatId, '❌ خطایی در خروج از تست پیش آمد.', {
                     parse_mode: 'Markdown',
                     ...mainKeyboard
                 });
