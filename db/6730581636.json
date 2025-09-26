@@ -1,0 +1,237 @@
+{
+  "words": [
+    {
+      "id": "24805f3e-4315-4f25-9c40-1810d9fca3f5",
+      "dutch": "precieze",
+      "farsi": "دقیق"
+    },
+    {
+      "id": "44cf8138-ddf1-4336-9a78-427c7d825a6c",
+      "dutch": "vertaling",
+      "farsi": "ترجمه"
+    },
+    {
+      "id": "68758e88-0978-44eb-b69c-02330fa5c6f0",
+      "dutch": "tekst",
+      "farsi": "متن"
+    },
+    {
+      "id": "0b30544e-b0cf-4b64-943c-ffa0906f9b01",
+      "dutch": "bedankt",
+      "farsi": "متشکر"
+    },
+    {
+      "id": "fbf1ec13-6c7a-4cd1-8162-f49857c5b7b1",
+      "dutch": "heel",
+      "farsi": "خیلی"
+    },
+    {
+      "id": "81f64a5c-f28f-49ce-987f-2d2db062e58e",
+      "dutch": "goed",
+      "farsi": "خوب"
+    },
+    {
+      "id": "0cba3fc9-0dde-42ae-a6c1-631a1dca1486",
+      "dutch": "belangrijke",
+      "farsi": "مهم"
+    },
+    {
+      "id": "9b649702-724e-46e3-8a83-febfeb9bfe91",
+      "dutch": "woorden",
+      "farsi": "کلمات"
+    },
+    {
+      "id": "53934ce5-7e94-4011-9cd6-b1bc978270bc",
+      "dutch": "werk",
+      "farsi": "کار"
+    },
+    {
+      "id": "21e78864-add1-488b-aa4e-0c641a434b7d",
+      "dutch": "handelingen",
+      "farsi": "اقدامات"
+    },
+    {
+      "id": "6d904332-14f0-4200-8dc3-497e8ba4a4c9",
+      "dutch": "informele",
+      "farsi": "غیررسمی"
+    },
+    {
+      "id": "1358adce-77c0-4416-9474-b4b5fafb327b",
+      "dutch": "warme",
+      "farsi": "گرم"
+    },
+    {
+      "id": "6458fb50-3738-49f5-a3bc-afdb6a0cba63",
+      "dutch": "uitdrukking",
+      "farsi": "عبارت"
+    },
+    {
+      "id": "41195eba-cd01-407a-b32a-df8ece5e60f2",
+      "dutch": "waardering",
+      "farsi": "قدردانی"
+    },
+    {
+      "id": "b9f53e31-fa82-46a9-9931-7e81b9914852",
+      "dutch": "gedaan",
+      "farsi": "انجام شده"
+    },
+    {
+      "id": "c764b781-f7e2-407e-a4fb-9ca82099e582",
+      "dutch": "uitstekend",
+      "farsi": "عالی"
+    },
+    {
+      "id": "d70d4b2d-d765-49b6-807d-f450003c2b24",
+      "dutch": "فرمت: کلمه_هلندی",
+      "farsi": "ترجمه_فارسی"
+    },
+    {
+      "id": "ff86041d-6f8c-45af-b71b-49d158bdd687",
+      "dutch": "toestand",
+      "farsi": "وضعیت"
+    },
+    {
+      "id": "81244783-ceb5-44a2-a521-a6f2eb3b83bf",
+      "dutch": "conditie",
+      "farsi": "شرایط"
+    },
+    {
+      "id": "1d9a1285-2207-4f2c-95b2-1c8fc48731bb",
+      "dutch": "gesteldheid",
+      "farsi": "حالت"
+    },
+    {
+      "id": "048ead21-fa87-47a5-a367-65cb321e4503",
+      "dutch": "prima",
+      "farsi": "عالی"
+    },
+    {
+      "id": "23124684-797a-4751-8374-3ebb5e3e649a",
+      "dutch": "prettig",
+      "farsi": "دلپذیر"
+    },
+    {
+      "id": "f3c14e38-a3f8-4f54-8b63-d56b2c93f1fc",
+      "dutch": "betekenis",
+      "farsi": "معنی"
+    },
+    {
+      "id": "f9e95b93-1a62-4a04-883e-6498c4ab759c",
+      "dutch": "zin",
+      "farsi": "جمله"
+    },
+    {
+      "id": "36b92bd4-70c1-4470-8dab-4d3f9509448b",
+      "dutch": "begroeting",
+      "farsi": "سلام"
+    },
+    {
+      "id": "866a4314-c859-4baa-a238-a574face924d",
+      "dutch": "welzijn",
+      "farsi": "رفاه"
+    },
+    {
+      "id": "7f12055f-c268-44f3-8599-72dd69413464",
+      "dutch": "gezondheid",
+      "farsi": "سلامت"
+    },
+    {
+      "id": "6d8fd0eb-a75e-49aa-855f-4734e30066d6",
+      "dutch": "gesprek",
+      "farsi": "گفتگو"
+    },
+    {
+      "id": "9385dc4e-2a05-40e3-9134-b8a8852d9637",
+      "dutch": "interesse",
+      "farsi": "علاقه"
+    },
+    {
+      "id": "b758cf67-69e2-4525-8059-f5d952722358",
+      "dutch": "andere",
+      "farsi": "دیگری"
+    },
+    {
+      "id": "b9f8a721-576e-46a5-8214-bcbc16202e9d",
+      "dutch": "beste",
+      "farsi": "بهترین"
+    },
+    {
+      "id": "822633fe-45c2-4457-ae6c-990dbec277b2",
+      "dutch": "manier",
+      "farsi": "روش"
+    },
+    {
+      "id": "8c53bff3-785c-4560-bcca-cfc8235e5ba2",
+      "dutch": "afstand",
+      "farsi": "فاصله"
+    },
+    {
+      "id": "2b78d5f3-02ab-4e00-bbc3-0897f7232a26",
+      "dutch": "houden",
+      "farsi": "نگه داشتن"
+    },
+    {
+      "id": "220ee8a1-9aa1-4cde-9287-86f6a2c7759f",
+      "dutch": "mensen",
+      "farsi": "مردم"
+    },
+    {
+      "id": "62875fa2-72ed-47c9-938e-cfb05d04b7d8",
+      "dutch": "zwak",
+      "farsi": "ضعیف"
+    },
+    {
+      "id": "4d1356bf-8fd4-4966-bdf0-f56546dc33da",
+      "dutch": "zien",
+      "farsi": "دیدن"
+    },
+    {
+      "id": "77ffbaac-ef17-4f0c-9d25-d0faa0a6066c",
+      "dutch": "diepere",
+      "farsi": "عمیق‌تر"
+    },
+    {
+      "id": "967ea735-a27d-4d87-83c3-50d68b1f9f3d",
+      "dutch": "distantiëren",
+      "farsi": "فاصله گرفتن"
+    },
+    {
+      "id": "e25e263c-1a22-449d-aea5-4b2885c81af5",
+      "dutch": "minderwaardig",
+      "farsi": "کم‌ارزش"
+    },
+    {
+      "id": "97cba5c2-8a1b-4451-a5d0-aab52fbc6dbe",
+      "dutch": "beschouwen",
+      "farsi": "نگاه کردن"
+    },
+    {
+      "id": "3ca719ae-dca2-4ee8-9527-46b48e4a5b66",
+      "dutch": "schadelijk",
+      "farsi": "زیان‌آور"
+    },
+    {
+      "id": "446c1a5d-641d-41bd-acfd-a56dfe016f8c",
+      "dutch": "relaties",
+      "farsi": "روابط"
+    },
+    {
+      "id": "ef3df1b2-e242-4824-aa51-f5b0e2b93ead",
+      "dutch": "eigenwaarde",
+      "farsi": "عزت نفس"
+    },
+    {
+      "id": "82c71728-9cf3-49fc-a3bd-e320d03c5b28",
+      "dutch": "persoonlijke",
+      "farsi": "شخصی"
+    },
+    {
+      "id": "7ada5d87-ed6f-4e65-b264-9a8814a6e03f",
+      "dutch": "groei",
+      "farsi": "رشد"
+    }
+  ],
+  "currentTest": null,
+  "testScore": 0,
+  "testTotal": 0
+}

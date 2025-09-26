@@ -1,0 +1,32 @@
+{
+  "name": "farsi-dutch-telegram-bot",
+  "version": "1.0.0",
+  "description": "A Telegram bot that translates between Farsi and Dutch using Claude API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "bot-only": "node bot.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "translation",
+    "farsi",
+    "dutch",
+    "claude",
+    "anthropic"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.2",
+    "node-telegram-bot-api": "^0.66.0",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
