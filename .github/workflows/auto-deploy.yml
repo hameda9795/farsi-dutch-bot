@@ -1,0 +1,113 @@
+name: Auto Deploy to Hetzner
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🚀 Checkout Repository
+      uses: actions/checkout@v3
+      
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        
+    - name: 🔍 Install Dependencies (for testing)
+      run: npm install
+      
+    - name: 🧪 Run Tests (if any)
+      run: |
+        if [ -f "package.json" ] && [ -n "$(npm run | grep test)" ]; then
+          npm test
+        else
+          echo "No tests found, skipping..."
+        fi
+      continue-on-error: true
+      
+    - name: 🚀 Deploy to Hetzner Server
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.HETZNER_HOST }}
+        username: ${{ secrets.HETZNER_USER }}
+        password: ${{ secrets.HETZNER_PASSWORD }}
+        port: 22
+        script: |
+          echo "🔄 Starting deployment process..."
+          
+          # Create backup directory with timestamp
+          BACKUP_DIR="/home/backups/farsi-dutch-bot-$(date +%Y%m%d_%H%M%S)"
+          mkdir -p /home/backups
+          
+          # Backup current version
+          if [ -d "/home/farsi-dutch-bot" ]; then
+            echo "📦 Creating backup..."
+            cp -r /home/farsi-dutch-bot $BACKUP_DIR
+          fi
+          
+          # Create project directory if not exists
+          mkdir -p /home/farsi-dutch-bot
+          cd /home/farsi-dutch-bot
+          
+          echo "📥 Current directory contents:"
+          ls -la
+          
+    - name: 📤 Upload Files to Server
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.HETZNER_HOST }}
+        username: ${{ secrets.HETZNER_USER }}
+        password: ${{ secrets.HETZNER_PASSWORD }}
+        port: 22
+        source: ".,!node_modules,!.git,!*.log,!.env"
+        target: "/home/farsi-dutch-bot"
+        overwrite: true
+        
+    - name: 🔧 Setup and Restart Bot
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.HETZNER_HOST }}
+        username: ${{ secrets.HETZNER_USER }}
+        password: ${{ secrets.HETZNER_PASSWORD }}
+        port: 22
+        script: |
+          cd /home/farsi-dutch-bot
+          
+          echo "📦 Installing dependencies..."
+          npm install --production
+          
+          echo "🔍 Checking bot status..."
+          pm2 describe farsi-dutch-bot > /dev/null 2>&1
+          if [ $? -eq 0 ]; then
+            echo "🔄 Restarting existing bot..."
+            pm2 restart farsi-dutch-bot
+          else
+            echo "🚀 Starting new bot instance..."
+            pm2 start ecosystem.config.js
+          fi
+          
+          # Save PM2 configuration
+          pm2 save
+          
+          echo "📊 Bot status:"
+          pm2 status
+          
+          echo "📋 Recent logs:"
+          pm2 logs farsi-dutch-bot --lines 10
+          
+          echo "✅ Deployment completed successfully!"
+          
+    - name: 🔔 Deployment Summary
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "🎉 Bot deployed successfully to Hetzner server!"
+          echo "🤖 Your Farsi-Dutch bot is now running with the latest changes."
+        else
+          echo "❌ Deployment failed. Please check the logs above."
+        fi

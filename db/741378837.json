@@ -232,16 +232,16 @@
     }
   ],
   "currentTest": {
-    "id": "o0g1euom6",
-    "type": "dutch_to_farsi",
-    "question": "معنی کلمه «familie» چیست؟",
-    "correctAnswer": "خانواده",
+    "id": "bbm9q4v1y",
+    "type": "farsi_to_dutch",
+    "question": "معادل هلندی کلمه «فرستادن» چیست؟",
+    "correctAnswer": "sturen",
     "options": [
-      "ترجمه",
-      "خانواده",
-      "روزها"
+      "sturen",
+      "krijg",
+      "uiteindelijk"
     ],
-    "explanation": "کلمه «familie» به معنی «خانواده» است."
+    "explanation": "کلمه «فرستادن» به هلندی «sturen» است."
   },
   "testScore": 117,
   "testTotal": 121
