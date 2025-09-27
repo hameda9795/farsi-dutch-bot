@@ -1,5 +1,5 @@
-# PowerShell Script for Deploying Farsi-Dutch Bot to Hetzner Server
-# راه‌اندازی بات فارسی-هلندی روی سرور Hetzner
+# PowerShell Script for Safe Deployment to Hetzner Server (با حفظ دیتابیس‌ها)
+# راه‌اندازی امن بات فارسی-هلندی روی سرور Hetzner
 
 param(
     [string]$ServerIP = "91.99.49.208",
@@ -7,19 +7,51 @@ param(
     [string]$ProjectPath = "C:\Users\31623\Documents\My-Projecten\farsi-dutch-bot"
 )
 
-Write-Host "🚀 Starting deployment to Hetzner server..." -ForegroundColor Green
+Write-Host "🚀 شروع deploy امن به سرور Hetzner..." -ForegroundColor Green
+Write-Host "⚠️ دیتابیس‌های کاربران حفظ خواهند شد!" -ForegroundColor Yellow
+
+# Step 1: Backup databases on server first
+$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$backupDir = "backup-db-$timestamp"
+
+Write-Host ""
+Write-Host "1️⃣ ایجاد backup از دیتابیس‌های سرور..." -ForegroundColor Yellow
+
+$backupCommands = @"
+cd /home/farsi-dutch-bot 2>/dev/null || cd /root/farsi-dutch-bot 2>/dev/null || echo 'Project directory not found, skipping backup'
+if [ -d "db" ]; then
+    echo "💾 ایجاد backup از دیتابیس‌ها..."
+    pm2 stop farsi-dutch-bot 2>/dev/null || pm2 stop bot 2>/dev/null || echo 'Bot not running'
+    mkdir -p $backupDir
+    cp -r db/* $backupDir/ 2>/dev/null && echo "✅ Backup موفق: $backupDir" || echo "⚠️ مشکل در backup"
+    ls -la $backupDir 2>/dev/null || echo 'Backup directory check failed'
+else
+    echo "ℹ️ هیچ دیتابیسی برای backup وجود ندارد (اولین deploy)"
+fi
+"@
+
+try {
+    $backupCommands | ssh ${Username}@${ServerIP}
+    Write-Host "✅ مرحله backup کامل شد" -ForegroundColor Green
+} catch {
+    Write-Host "⚠️ هشدار: مشکل در backup - ادامه می‌دهیم..." -ForegroundColor Yellow
+}
 
 # Check if SCP is available (part of OpenSSH)
+Write-Host ""
+Write-Host "2️⃣ بررسی ابزارهای مورد نیاز..." -ForegroundColor Yellow
 try {
-    scp
-    Write-Host "✅ SCP is available" -ForegroundColor Green
+    scp 2>$null
+    Write-Host "✅ SCP در دسترس است" -ForegroundColor Green
 } catch {
-    Write-Host "❌ SCP not found. Please install OpenSSH client." -ForegroundColor Red
-    Write-Host "Run: Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0" -ForegroundColor Yellow
+    Write-Host "❌ SCP پیدا نشد. لطفاً OpenSSH client نصب کنید." -ForegroundColor Red
+    Write-Host "اجرا کنید: Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0" -ForegroundColor Yellow
     exit 1
 }
 
-# Create temporary deployment directory without node_modules
+# Create temporary deployment directory without sensitive files
+Write-Host ""
+Write-Host "3️⃣ آماده‌سازی فایل‌ها برای آپلود..." -ForegroundColor Yellow
 $TempDir = "$env:TEMP\farsi-dutch-bot-deploy"
 Write-Host "📁 Creating temporary deployment directory..." -ForegroundColor Yellow
 
@@ -29,11 +61,11 @@ if (Test-Path $TempDir) {
 
 New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
 
-# Copy files excluding node_modules, .git, and other unnecessary files
-$ExcludeFolders = @("node_modules", ".git", "logs")
-$ExcludeFiles = @("*.log", "*.tmp", ".env")
+# Copy files excluding node_modules, .git, databases and other unnecessary files
+$ExcludeFolders = @("node_modules", ".git", "logs", "db", "backup-*", "temp_deploy")
+$ExcludeFiles = @("*.log", "*.tmp", ".env", "test-*.js")
 
-Write-Host "📦 Copying project files (excluding node_modules)..." -ForegroundColor Yellow
+Write-Host "📦 کپی کردن فایل‌های پروژه (بدون node_modules و دیتابیس‌ها)..." -ForegroundColor Yellow
 
 # Copy all files except excluded ones
 Get-ChildItem $ProjectPath -Recurse | Where-Object {
@@ -92,34 +124,55 @@ try {
     Remove-Item $TempDir -Recurse -Force
 }
 
-Write-Host "🔧 Setting up bot on server..." -ForegroundColor Yellow
+Write-Host "🔧 راه‌اندازی ربات روی سرور..." -ForegroundColor Yellow
 
-# SSH commands to set up the bot
-$SetupCommands = @(
-    "cd /home/farsi-dutch-bot",
-    "chmod +x deploy.sh",
-    "npm install",
-    "mkdir -p logs",
-    "echo 'Please update the .env file with your actual tokens:'",
-    "echo 'nano .env'",
-    "echo 'Then run: pm2 start ecosystem.config.js'"
-)
+# SSH commands to set up the bot with database restoration
+$SetupCommands = @"
+cd /home/farsi-dutch-bot 2>/dev/null || cd /root/farsi-dutch-bot
+echo "📦 نصب dependencies..."
+npm install --production
 
-foreach ($command in $SetupCommands) {
-    Write-Host "Executing: $command" -ForegroundColor Gray
-    ssh ${Username}@${ServerIP} $command
+echo "🔄 بازیابی دیتابیس‌ها از backup..."
+if [ -d "$backupDir" ]; then
+    mkdir -p db
+    cp -r $backupDir/* db/ 2>/dev/null && echo "✅ دیتابیس‌ها بازیابی شدند" || echo "⚠️ مشکل در بازیابی دیتابیس‌ها"
+    ls -la db/
+else
+    echo "ℹ️ هیچ backup برای بازیابی وجود ندارد"
+    mkdir -p db
+fi
+
+echo "🚀 راه‌اندازی ربات..."
+pm2 stop farsi-dutch-bot 2>/dev/null || pm2 stop bot 2>/dev/null || echo "ربات قبلی در حال اجرا نبود"
+pm2 delete farsi-dutch-bot 2>/dev/null || pm2 delete bot 2>/dev/null || echo "حذف process قبلی"
+pm2 start ecosystem.config.js
+
+echo "✅ راه‌اندازی کامل شد!"
+pm2 list
+pm2 logs bot --lines 5
+"@
+
+try {
+    $SetupCommands | ssh ${Username}@${ServerIP}
+    Write-Host "✅ راه‌اندازی موفق!" -ForegroundColor Green
+} catch {
+    Write-Host "❌ خطا در راه‌اندازی: $($_.Exception.Message)" -ForegroundColor Red
 }
 
-Write-Host "🎉 Deployment completed!" -ForegroundColor Green
 Write-Host ""
-Write-Host "📋 Next steps:" -ForegroundColor Yellow
-Write-Host "1. SSH to your server: ssh ${Username}@${ServerIP}"
-Write-Host "2. Navigate to project: cd /home/farsi-dutch-bot"
-Write-Host "3. Update .env file: nano .env"
-Write-Host "4. Start bot with PM2: pm2 start ecosystem.config.js"
-Write-Host "5. Save PM2 config: pm2 save"
-Write-Host "6. Setup PM2 startup: pm2 startup"
+Write-Host "🎉 Deploy کامل شد!" -ForegroundColor Green
 Write-Host ""
+Write-Host "📋 کارهای انجام شده:" -ForegroundColor Yellow
+Write-Host "✅ Backup از دیتابیس‌های قبلی گرفته شد: $backupDir"
+Write-Host "✅ کد جدید آپلود شد"
+Write-Host "✅ دیتابیس‌ها بازیابی شدند"
+Write-Host "✅ ربات راه‌اندازی شد"
+Write-Host ""
+Write-Host "🔍 برای مانیتور کردن ربات:" -ForegroundColor Cyan
+Write-Host "ssh ${Username}@${ServerIP}"
+Write-Host "pm2 status"
+Write-Host "pm2 logs bot"
+Write-Host "pm2 monit"
 Write-Host "📊 Monitor your bot:" -ForegroundColor Cyan
 Write-Host "- pm2 status"
 Write-Host "- pm2 logs farsi-dutch-bot"

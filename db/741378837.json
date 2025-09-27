@@ -1,54 +1,305 @@
 {
   "words": [
     {
-      "id": "18e5ed7c-5f01-4b9b-82a7-4669bc2a1813",
-      "dutch": "فرمت: کلمه_هلندی",
-      "farsi": "ترجمه_فارسی"
+      "id": "316a66af-8032-49f8-96fe-1d788fb81a20",
+      "dutch": "partners",
+      "farsi": "شرکا"
     },
     {
-      "id": "8b5154d7-07f4-43ec-ab3f-217b68acd02b",
-      "dutch": "precieze",
-      "farsi": "دقیق"
+      "id": "537e3edd-0571-411f-bd98-04cede3575a3",
+      "dutch": "cookies",
+      "farsi": "کوکی‌ها"
     },
     {
-      "id": "990d67e1-57a1-4899-bfe1-abe2b0005489",
-      "dutch": "vertaling",
-      "farsi": "ترجمه"
+      "id": "c27b7112-0d40-499f-be2d-3af4743e386b",
+      "dutch": "apparaat",
+      "farsi": "دستگاه"
     },
     {
-      "id": "b0f3a72c-6331-4bfc-b53c-75f2c5b09015",
-      "dutch": "werk",
-      "farsi": "کار"
+      "id": "70659285-2808-4e2f-9029-4468580d2412",
+      "dutch": "verwerken",
+      "farsi": "پردازش کردن"
     },
     {
-      "id": "3ae8a094-c240-4981-a238-61f38dd97074",
-      "dutch": "bereid",
-      "farsi": "آماده"
+      "id": "2cb50e0e-37ec-4089-b87f-6896227785a8",
+      "dutch": "persoonlijke",
+      "farsi": "شخصی"
     },
     {
-      "id": "3ddf790b-4a12-4812-a7fe-3f3c172cec46",
-      "dutch": "sollicitatiegesprekken",
-      "farsi": "مصاحبه شغلی"
+      "id": "29e4fb8e-abad-41dd-b8ac-65ee0989de08",
+      "dutch": "gegevens",
+      "farsi": "داده‌ها"
     },
     {
-      "id": "09688f8b-535b-433e-933d-37f3902db128",
-      "dutch": "zoek",
-      "farsi": "جستجو"
+      "id": "2847abf5-25f4-4fc8-9b40-8da274a717bd",
+      "dutch": "unieke",
+      "farsi": "منحصر به فرد"
+    },
+    {
+      "id": "5a53ee48-59c1-4363-ae04-9cc68c0457bd",
+      "dutch": "identificatoren",
+      "farsi": "شناسه‌ها"
+    },
+    {
+      "id": "26a2ddae-0b2b-4f69-a8c2-5f5eb03e7785",
+      "dutch": "gepersonaliseerde",
+      "farsi": "شخصی‌سازی شده"
+    },
+    {
+      "id": "18d53945-e10b-4717-b29d-972be62c3480",
+      "dutch": "advertenties",
+      "farsi": "تبلیغات"
+    },
+    {
+      "id": "0a33e66f-bcb9-41cf-817b-30cffa509789",
+      "dutch": "inhoud",
+      "farsi": "محتوا"
+    },
+    {
+      "id": "2dd217ee-bf5f-40e0-9ea1-bd6235d08c1a",
+      "dutch": "doelgroepinzichten",
+      "farsi": "بینش‌های مخاطبان"
+    },
+    {
+      "id": "f1aeb582-f81c-4f78-a6f9-9921024f262e",
+      "dutch": "ontwikkeling",
+      "farsi": "توسعه"
+    },
+    {
+      "id": "92a89629-485c-4bcb-99dd-26065f7bc929",
+      "dutch": "diensten",
+      "farsi": "خدمات"
+    },
+    {
+      "id": "6bdbc95e-ff59-4597-bbc2-fb9b82c0f56a",
+      "dutch": "huis",
+      "farsi": "خانه"
+    },
+    {
+      "id": "ab3a8e29-c604-4987-930b-c148e9118ee5",
+      "dutch": "boek",
+      "farsi": "کتاب"
+    },
+    {
+      "id": "592b17ca-9afe-402a-b0bc-fbce03552456",
+      "dutch": "water",
+      "farsi": "آب"
+    },
+    {
+      "id": "822cd3a3-81a0-4570-a700-8831d0874f07",
+      "dutch": "eten",
+      "farsi": "خوردن"
+    },
+    {
+      "id": "46988d22-861d-49a8-bdcb-ccc8fb7a47ed",
+      "dutch": "slapen",
+      "farsi": "خوابیدن"
+    },
+    {
+      "id": "8703aa17-d85a-4f26-bfdf-1b01e876c0bd",
+      "dutch": "reisverhaal, reisverslag",
+      "farsi": "سفرنامه"
+    },
+    {
+      "id": "5d772207-62ca-4f2d-9f33-c00102d7a235",
+      "dutch": "reizigers, ontdekkingsreizigers",
+      "farsi": "سیاحان"
+    },
+    {
+      "id": "30316b47-e69d-41de-bcd7-4dda9cb9375f",
+      "dutch": "onderzoekers, zoekers",
+      "farsi": "جویندگان"
+    },
+    {
+      "id": "d2564a07-3f63-48d9-8cb0-e8e133386f14",
+      "dutch": "oriëntalisten",
+      "farsi": "شرق‌شناسان"
+    },
+    {
+      "id": "e5f970cd-5185-42d5-97b0-ffb5f6a7e1ea",
+      "dutch": "iranologen",
+      "farsi": "ایران‌شناسان"
+    },
+    {
+      "id": "c5a34fa5-159f-43c0-9066-ec9b7d2d7673",
+      "dutch": "ontwikkelingen, veranderingen",
+      "farsi": "تحولات"
+    },
+    {
+      "id": "11a57f29-a566-4756-846f-83fca78f7091",
+      "dutch": "archeologie",
+      "farsi": "باستان‌شناسی"
+    },
+    {
+      "id": "203cfcdd-e60b-489f-880e-0da3bce751a9",
+      "dutch": "archeologisch",
+      "farsi": "باستان‌شناسانه"
+    },
+    {
+      "id": "034e72be-1a3d-4c57-9bb8-cde804144cdf",
+      "dutch": "antiquiteitenverzameling",
+      "farsi": "عتیقه‌یابی"
+    },
+    {
+      "id": "7f2c0131-da1b-4b79-a0e7-fd320191ba4f",
+      "dutch": "buitenlanders, vreemdelingen",
+      "farsi": "بیگانگان"
+    },
+    {
+      "id": "66d5489c-7967-4019-89df-f83d5d9e4a60",
+      "dutch": "perioden, tijdperken",
+      "farsi": "ادوار"
+    },
+    {
+      "id": "59ed43fa-21bf-46dc-9c18-c84f4af8091b",
+      "dutch": "Qajar (dynastie)",
+      "farsi": "قاجار"
+    },
+    {
+      "id": "89a1792d-ae12-4c52-8697-cca4b2b0a795",
+      "dutch": "Pahlavi (dynastie)",
+      "farsi": "پهلوی"
+    },
+    {
+      "id": "a63f40b6-0021-4f6e-8816-936ee16f418c",
+      "dutch": "direct, rechtstreeks",
+      "farsi": "مستقیم"
+    },
+    {
+      "id": "87beb0f6-0462-4cce-ae65-8d42dc36b27a",
+      "dutch": "beschrijving, omschrijving",
+      "farsi": "توصیف"
+    },
+    {
+      "id": "7c45a42c-c6fb-458d-82ec-2f65a83d3e14",
+      "dutch": "basis, fundament",
+      "farsi": "مبنا"
+    },
+    {
+      "id": "d3f4b9d6-2510-4cb7-99b4-0f3594ffb343",
+      "dutch": "bewustzijn",
+      "farsi": "آگاهی، هوشیاری"
+    },
+    {
+      "id": "785e162d-4eea-4bff-8234-53612ae7db73",
+      "dutch": "overmaken",
+      "farsi": "انتقال دادن، واریز کردن"
+    },
+    {
+      "id": "9d167bcb-545e-40a2-a0be-909d093b252f",
+      "dutch": "laatste tijd",
+      "farsi": "اواخر، این روزها"
+    },
+    {
+      "id": "7811424e-d1c0-4c23-abca-baf0dfc670eb",
+      "dutch": "bevallen",
+      "farsi": "دلپذیر بودن، راضی بودن"
+    },
+    {
+      "id": "c199e431-87f6-4ba1-aa86-11d0201eec6d",
+      "dutch": "wisselvallig",
+      "farsi": "متغیر، بی‌ثبات"
+    },
+    {
+      "id": "c2d644d0-c8f1-4407-972a-b2fbe23c472c",
+      "dutch": "wennen",
+      "farsi": "عادت کردن"
+    },
+    {
+      "id": "bb4e036d-d745-4a0b-8855-d8ad32062bed",
+      "dutch": "grachten",
+      "farsi": "کانال‌های شهری"
+    },
+    {
+      "id": "ae5d2191-8fd9-4649-b2ca-a50432711a0c",
+      "dutch": "met bakken",
+      "farsi": "سیل‌آسا، به شدت"
+    },
+    {
+      "id": "5a24815d-15f3-4f6f-a98d-2b844facc787",
+      "dutch": "beseffen",
+      "farsi": "درک کردن، متوجه شدن"
+    },
+    {
+      "id": "fa6731ef-4b4b-45c9-9b04-686804c4a530",
+      "dutch": "noodzaak",
+      "farsi": "ضرورت، نیاز مبرم"
+    },
+    {
+      "id": "a3e0548e-4e9e-4aa6-9ff4-0b980acf7731",
+      "dutch": "prachtig",
+      "farsi": "زیبا، باشکوه"
+    },
+    {
+      "id": "a9997449-15a6-4407-a049-f88b0716f143",
+      "dutch": "schijnen",
+      "farsi": "درخشیدن، تابیدن"
+    },
+    {
+      "id": "fcaa0352-05fc-42a9-ab6d-61c2b3569b40",
+      "dutch": "luxe",
+      "farsi": "تجملی، لوکس"
     }
   ],
   "currentTest": null,
-  "testScore": 5,
-  "testTotal": 5,
+  "testScore": 15,
+  "testTotal": 22,
   "testSession": {
     "isActive": true,
     "usedWordIds": [
-      "09688f8b-535b-433e-933d-37f3902db128",
-      "b0f3a72c-6331-4bfc-b53c-75f2c5b09015",
-      "18e5ed7c-5f01-4b9b-82a7-4669bc2a1813",
-      "3ddf790b-4a12-4812-a7fe-3f3c172cec46",
-      "990d67e1-57a1-4899-bfe1-abe2b0005489",
-      "8b5154d7-07f4-43ec-ab3f-217b68acd02b"
+      "46988d22-861d-49a8-bdcb-ccc8fb7a47ed",
+      "2847abf5-25f4-4fc8-9b40-8da274a717bd",
+      "537e3edd-0571-411f-bd98-04cede3575a3",
+      "316a66af-8032-49f8-96fe-1d788fb81a20",
+      "0a33e66f-bcb9-41cf-817b-30cffa509789",
+      "592b17ca-9afe-402a-b0bc-fbce03552456",
+      "18d53945-e10b-4717-b29d-972be62c3480",
+      "92a89629-485c-4bcb-99dd-26065f7bc929",
+      "822cd3a3-81a0-4570-a700-8831d0874f07",
+      "6bdbc95e-ff59-4597-bbc2-fb9b82c0f56a",
+      "59ed43fa-21bf-46dc-9c18-c84f4af8091b",
+      "30316b47-e69d-41de-bcd7-4dda9cb9375f",
+      "fa6731ef-4b4b-45c9-9b04-686804c4a530",
+      "bb4e036d-d745-4a0b-8855-d8ad32062bed",
+      "a63f40b6-0021-4f6e-8816-936ee16f418c",
+      "8703aa17-d85a-4f26-bfdf-1b01e876c0bd",
+      "034e72be-1a3d-4c57-9bb8-cde804144cdf",
+      "ab3a8e29-c604-4987-930b-c148e9118ee5",
+      "e5f970cd-5185-42d5-97b0-ffb5f6a7e1ea",
+      "11a57f29-a566-4756-846f-83fca78f7091",
+      "a9997449-15a6-4407-a049-f88b0716f143",
+      "a3e0548e-4e9e-4aa6-9ff4-0b980acf7731",
+      "c199e431-87f6-4ba1-aa86-11d0201eec6d",
+      "66d5489c-7967-4019-89df-f83d5d9e4a60",
+      "89a1792d-ae12-4c52-8697-cca4b2b0a795",
+      "fcaa0352-05fc-42a9-ab6d-61c2b3569b40",
+      "c2d644d0-c8f1-4407-972a-b2fbe23c472c",
+      "d3f4b9d6-2510-4cb7-99b4-0f3594ffb343",
+      "7c45a42c-c6fb-458d-82ec-2f65a83d3e14",
+      "d2564a07-3f63-48d9-8cb0-e8e133386f14",
+      "9d167bcb-545e-40a2-a0be-909d093b252f",
+      "ae5d2191-8fd9-4649-b2ca-a50432711a0c",
+      "203cfcdd-e60b-489f-880e-0da3bce751a9"
     ],
-    "startTime": "2025-09-26T19:15:36.911Z"
-  }
+    "startTime": "2025-09-26T20:47:45.491Z"
+  },
+  "importantWords": [
+    "2847abf5-25f4-4fc8-9b40-8da274a717bd",
+    "5a53ee48-59c1-4363-ae04-9cc68c0457bd",
+    "537e3edd-0571-411f-bd98-04cede3575a3",
+    "2dd217ee-bf5f-40e0-9ea1-bd6235d08c1a",
+    "29e4fb8e-abad-41dd-b8ac-65ee0989de08",
+    "a63f40b6-0021-4f6e-8816-936ee16f418c",
+    "8703aa17-d85a-4f26-bfdf-1b01e876c0bd",
+    "034e72be-1a3d-4c57-9bb8-cde804144cdf",
+    "ab3a8e29-c604-4987-930b-c148e9118ee5",
+    "e5f970cd-5185-42d5-97b0-ffb5f6a7e1ea",
+    "11a57f29-a566-4756-846f-83fca78f7091",
+    "a9997449-15a6-4407-a049-f88b0716f143",
+    "a3e0548e-4e9e-4aa6-9ff4-0b980acf7731",
+    "c199e431-87f6-4ba1-aa86-11d0201eec6d",
+    "89a1792d-ae12-4c52-8697-cca4b2b0a795",
+    "fcaa0352-05fc-42a9-ab6d-61c2b3569b40",
+    "203cfcdd-e60b-489f-880e-0da3bce751a9"
+  ]
 }

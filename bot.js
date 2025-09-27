@@ -30,8 +30,8 @@ const {
     formatSingleTestResponse
 } = require('./utils/messageFormatter');
 
-// Import State module for saving translations
-const { loadState, saveState, addWord, addWordsFromExtraction, getRandomWords, setCurrentTest, updateTestScore, clearCurrentTest, getVocabularyStats, getNextTestWord, getWordsForOptions, startTestSession, endTestSession, markWordAsImportant, unmarkWordAsImportant, getImportantWords, isWordImportant } = require('./lib/state');
+// Import State module for saving translations (including the new filtering function)
+const { loadState, saveState, addWord, addWordsFromExtraction, getRandomWords, setCurrentTest, updateTestScore, clearCurrentTest, getVocabularyStats, getNextTestWord, getWordsForOptions, startTestSession, endTestSession, markWordAsImportant, unmarkWordAsImportant, getImportantWords, isWordImportant, getSimpleWordsForTesting } = require('./lib/state');
 
 // Environment variables validation
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -1352,6 +1352,64 @@ bot.on('callback_query', async (callbackQuery) => {
     }
 });
 
+/**
+ * Extract vocabulary items from comprehensive translation analysis
+ * @param {string} analysis - The comprehensive analysis text
+ * @param {string} detectedLanguage - 'persian' or 'dutch'
+ * @returns {Array} - Array of {dutch, farsi} vocabulary objects
+ */
+function extractVocabularyFromAnalysis(analysis, detectedLanguage) {
+    const vocabularyItems = [];
+    
+    try {
+        // Look for vocabulary section in the analysis
+        const lines = analysis.split('\n');
+        let inVocabSection = false;
+        
+        for (const line of lines) {
+            // Check if we're entering the vocabulary section
+            if (line.includes('📚 واژگان مهم') || line.includes('📚 Belangrijke woorden')) {
+                inVocabSection = true;
+                continue;
+            }
+            
+            // Check if we're leaving the vocabulary section
+            if (inVocabSection && (line.includes('[3]') || line.includes('💡 منظور') || line.includes('💡 Betekenis'))) {
+                break;
+            }
+            
+            // Extract vocabulary items
+            if (inVocabSection && line.includes(' = ')) {
+                const parts = line.split(' = ');
+                if (parts.length === 2) {
+                    const word = parts[0].trim();
+                    const meaning = parts[1].trim();
+                    
+                    if (word && meaning) {
+                        if (detectedLanguage === 'persian') {
+                            // Persian input text: farsi_word = dutch_meaning
+                            vocabularyItems.push({
+                                dutch: meaning,
+                                farsi: word
+                            });
+                        } else {
+                            // Dutch input text: dutch_word = farsi_meaning
+                            vocabularyItems.push({
+                                dutch: word,
+                                farsi: meaning
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error extracting vocabulary:', error);
+    }
+    
+    return vocabularyItems;
+}
+
 // Helper functions for different modes
 /**
  * Handle translation mode
@@ -1372,31 +1430,36 @@ async function handleTranslationMode(userInput, analysis, chatId) {
         const dictionaryData = await claudeService.getDictionaryDefinition(userInput, detectedLanguage);
         response = formatDictionaryResponse(dictionaryData);
         
-        // Save dictionary examples as individual words (SIMPLIFIED)
-        if (dictionaryData.examples && dictionaryData.examples.length > 0) {
-            console.log(`📖 Saving ${dictionaryData.examples.length} dictionary examples`);
-            for (const example of dictionaryData.examples) {
-                if (example.dutch && example.farsi) {
-                    try {
-                        await addWord(chatId, example.dutch, example.farsi);
-                        console.log(`✅ Saved example: ${example.dutch} → ${example.farsi}`);
-                    } catch (error) {
-                        console.error('Error saving dictionary example:', error);
-                    }
+        // Save the main word entry AND synonyms/antonyms (NOT the examples)
+        // Examples are just for display, not for vocabulary building
+        try {
+            console.log(`� Saving main dictionary word: "${userInput}" → "${dictionaryData.translation || dictionaryData.dutchMeaning || dictionaryData.farsiMeaning || ''}"`);
+            
+            // Extract the actual translation from the dictionary data
+            let translation = '';
+            if (detectedLanguage === 'persian') {
+                translation = dictionaryData.dutchMeaning || dictionaryData.translation || '';
+                if (translation && translation.trim()) {
+                    await addWord(chatId, translation, userInput);
+                    console.log(`✅ Dictionary entry saved: ${userInput} → ${translation}`);
+                    
+                    // Show success message to user
+                    await bot.sendMessage(chatId, `📚 کلمه «${userInput}» با ترجمه «${translation}» به واژگان شما اضافه شد!`);
+                } else {
+                    console.log(`⚠️ No translation found for Persian word: ${userInput}`);
+                }
+            } else {
+                translation = dictionaryData.farsiMeaning || dictionaryData.translation || '';
+                if (translation && translation.trim()) {
+                    await addWord(chatId, userInput, translation);
+                    console.log(`✅ Dictionary entry saved: ${userInput} → ${translation}`);
+                    
+                    // Show success message to user
+                    await bot.sendMessage(chatId, `📚 کلمه «${userInput}» با ترجمه «${translation}» به واژگان شما اضافه شد!`);
+                } else {
+                    console.log(`⚠️ No translation found for Dutch word: ${userInput}`);
                 }
             }
-        }
-        
-        // Also save the main word entry (SIMPLIFIED)
-        try {
-            console.log(`💾 Saving main dictionary word: "${userInput}" → "${dictionaryData.translation || ''}"`);
-            
-            if (detectedLanguage === 'persian') {
-                await addWord(chatId, dictionaryData.translation || '', userInput);
-            } else {
-                await addWord(chatId, userInput, dictionaryData.translation || '');
-            }
-            console.log(`✅ Dictionary entry saved successfully`);
         } catch (error) {
             console.error('❌ Error saving dictionary entry:', error);
         }
@@ -1428,117 +1491,79 @@ async function handleTranslationMode(userInput, analysis, chatId) {
             console.log('Could not extract simple translation for saving');
         }
         
-        // Extract and save individual words from comprehensive analysis for vocabulary building
+        // Extract and save important vocabulary from comprehensive translation
         try {
-            console.log('🔤 Extracting vocabulary from translation for word-focused storage');
+            console.log('📚 Extracting important vocabulary from comprehensive translation...');
             
-            // Simple approach: save the main translation first
-            const isSimpleWord = !userInput.includes(' ') && !simpleTranslation.includes(' ');
-            if (isSimpleWord && userInput.trim() && simpleTranslation.trim()) {
-                if (detectedLanguage === 'persian') {
-                    await addWord(chatId, simpleTranslation, userInput);
-                    console.log(`✅ Saved simple word: ${userInput} → ${simpleTranslation}`);
-                } else {
-                    await addWord(chatId, userInput, simpleTranslation);
-                    console.log(`✅ Saved simple word: ${userInput} → ${simpleTranslation}`);
-                }
-            }
+            // Extract vocabulary section from the comprehensive analysis
+            const vocabSection = extractVocabularyFromAnalysis(comprehensiveAnalysis, detectedLanguage);
             
-            // Enable vocabulary extraction from comprehensive translation
-            console.log('🔤 Extracting vocabulary from translation for word-focused storage');
-            
-            // Try to extract additional words using Claude
-            try {
-                console.log('🔤 Asking Claude to extract key vocabulary...');
+            if (vocabSection && vocabSection.length > 0) {
+                console.log(`🔍 Found ${vocabSection.length} important vocabulary items`);
                 
-                // Check if the comprehensive analysis contains Dutch text
-                const dutchIndicators = [
-                    // Common Dutch words
-                    /\b(is|zijn|het|de|een|van|voor|op|met|aan|door|over|onder|tussen|zonder|binnen|buiten|tijdens|tegen|sinds|tot|naar|uit|bij)\b/i,
-                    // Dutch specific patterns
-                    /\b(hebben|hebt|heeft|zijn|bent|was|waren|wordt|worden|kan|kunnen|moet|moeten|wil|willen|zou|zouden)\b/i,
-                    // Dutch vocabulary indicators
-                    /\b(leven|gevoel|aandacht|uitkomen|gelijk|helemaal|toch|wanneer|waar|hoe|wat|wie|waarom)\b/i,
-                    // Dutch letter combinations
-                    /ij|oo|ee|aa|uu|ou|au|eu|ui/i
-                ];
-                
-                const containsDutch = dutchIndicators.some(pattern => pattern.test(comprehensiveAnalysis));
-                console.log('🔍 Dutch content detection:', containsDutch ? 'Found' : 'Not found');
-                console.log('🔍 Checking text:', comprehensiveAnalysis.substring(0, 100) + '...');
-                
-                if (!containsDutch) {
-                    console.log('ℹ️ No substantial Dutch content found for vocabulary extraction');
-                } else {
-                    const vocabularyExtractionPrompt = `
-Extract Dutch vocabulary words from this text. Only extract meaningful words (nouns, verbs, adjectives). Skip common words like: het, de, een, is, zijn, van, voor, op, met, aan, door, etc.
-
-Format: dutch_word|persian_translation
-
-Text: ${comprehensiveAnalysis}
-
-Extract only vocabulary words in the specified format:`;
-                    
-                    const extractedVocabulary = await claudeService.translateText(vocabularyExtractionPrompt, 'english');
-                    console.log('🔍 Claude vocabulary extraction response:', extractedVocabulary.substring(0, 200) + '...');
-                    
-                    // Parse the response more reliably
-                    const lines = extractedVocabulary.split('\n');
-                    let addedCount = 0;
-                    
-                    for (const line of lines) {
-                        const trimmedLine = line.trim();
-                        if (trimmedLine.includes('|') && 
-                            !trimmedLine.toLowerCase().includes('extract') &&
-                            !trimmedLine.includes('**') && 
-                            !trimmedLine.includes('##') &&
-                            !trimmedLine.toLowerCase().includes('format') &&
-                            !trimmedLine.toLowerCase().includes('dutch_word') &&
-                            !trimmedLine.toLowerCase().includes('persian_translation')) {
-                            
-                            const parts = trimmedLine.split('|');
-                            if (parts.length >= 2) {
-                                const dutch = parts[0].trim();
-                                const farsi = parts[1].trim();
-                                
-                                // Validate that we have actual words, not instructions
-                                if (dutch && farsi && 
-                                    dutch.length > 1 && dutch.length < 30 &&
-                                    farsi.length > 0 && farsi.length < 50 &&
-                                    !dutch.toLowerCase().includes('word') &&
-                                    !farsi.toLowerCase().includes('translation')) {
-                                    
-                                    await addWord(chatId, dutch, farsi);
-                                    console.log(`✅ Added vocabulary: ${dutch} → ${farsi}`);
-                                    addedCount++;
-                                }
-                            }
-                        }
-                    }
-                    
-                    if (addedCount > 0) {
-                        console.log(`🎉 Added ${addedCount} vocabulary words from translation!`);
-                        
-                        // Show success message to user
-                        await bot.sendMessage(chatId, `📚 ${addedCount} کلمه جدید به مجموعه واژگان شما اضافه شد!`, {
-                            reply_markup: {
-                                inline_keyboard: [[
-                                    {text: '📊 مشاهده واژگان', callback_data: 'show_vocab'},
-                                    {text: '🧪 تست واژگان', callback_data: 'test_vocab'}
-                                ]]
-                            }
-                        });
-                    } else {
-                        console.log('ℹ️ No new vocabulary words extracted from this translation');
+                for (const vocabItem of vocabSection) {
+                    if (vocabItem.dutch && vocabItem.farsi) {
+                        await addWord(chatId, vocabItem.dutch, vocabItem.farsi);
+                        console.log(`✅ Important vocab saved: ${vocabItem.dutch} → ${vocabItem.farsi}`);
                     }
                 }
                 
-            } catch (extractError) {
-                console.log('⚠️ Vocabulary extraction failed, but main translation saved:', extractError.message);
+                // Show success message for vocabulary extracted from text
+                if (vocabSection.length > 0) {
+                    await bot.sendMessage(chatId, `📚 ${vocabSection.length} کلمه مهم از متن به واژگان شما اضافه شد!`);
+                }
+            } else {
+                console.log('ℹ️ No important vocabulary found in comprehensive analysis');
             }
             
         } catch (error) {
-            console.error('❌ Error in vocabulary processing:', error);
+            console.error('❌ Error extracting vocabulary from comprehensive translation:', error);
+        }
+        
+        // Save the main translation as a word/phrase if it's simple enough
+        try {
+            console.log('� Saving main translation for vocabulary');
+            
+            // Simple approach: save the main translation first if input is word-like
+            const userWords = userInput.trim().split(/\s+/);
+            const translationWords = simpleTranslation.trim().split(/\s+/);
+            
+            // Save if input is reasonably short (1-5 words)
+            if (userWords.length <= 5) {
+                // For sentences/phrases, try to get the actual translation from Claude
+                console.log('🔍 Getting translation from Claude for word saving...');
+                const actualTranslation = await claudeService.translateText(userInput, detectedLanguage);
+                
+                if (actualTranslation && actualTranslation.trim() && actualTranslation !== userInput) {
+                    const translationWords = actualTranslation.trim().split(/\s+/);
+                    
+                    // Make sure translation is also reasonably short
+                    if (translationWords.length <= 8) {
+                        if (detectedLanguage === 'persian') {
+                            await addWord(chatId, actualTranslation, userInput);
+                            console.log(`✅ Saved main translation: ${userInput} → ${actualTranslation}`);
+                            
+                            // Show success message to user
+                            await bot.sendMessage(chatId, `📚 عبارت «${userInput}» با ترجمه «${actualTranslation}» به واژگان شما اضافه شد!`);
+                        } else {
+                            await addWord(chatId, userInput, actualTranslation);
+                            console.log(`✅ Saved main translation: ${userInput} → ${actualTranslation}`);
+                            
+                            // Show success message to user
+                            await bot.sendMessage(chatId, `📚 عبارت «${userInput}» با ترجمه «${actualTranslation}» به واژگان شما اضافه شد!`);
+                        }
+                    } else {
+                        console.log(`ℹ️ Skipping main translation save - translation too long (${translationWords.length} words)`);
+                    }
+                } else {
+                    console.log(`ℹ️ Skipping main translation save - no valid translation obtained`);
+                }
+            } else {
+                console.log(`ℹ️ Skipping main translation save - input too long (${userWords.length} words)`);
+            }
+            
+        } catch (error) {
+            console.error('❌ Error in main translation saving:', error);
         }
     }
     
@@ -1606,18 +1631,32 @@ async function handleTestMode(chatId, userId) {
                    '💡 حداقل 3 کلمه نیاز است تا بتوانید تست بدهید.';
         }
         
+        // Filter words to get only simple vocabulary suitable for testing
+        const simpleWords = getSimpleWordsForTesting(state.words);
         const totalWords = state.words.length;
+        const simpleWordsCount = simpleWords.length;
         
-        if (totalWords < 3) {
-            return `📊 **شما ${totalWords} کلمه در دیکشنری دارید**\n\n` +
-                   `🎯 برای ساخت تست، حداقل 3 کلمه نیاز است.\n\n` +
-                   `🔤 کلمات بیشتری با دکمه **🌐 ترجمه** اضافه کنید:\n` +
-                   `• کلمات فارسی (مثل: خانه، کتاب، آب)\n` +
-                   `• کلمات هلندی (مثل: huis، boek، water)\n\n` +
-                   `✨ هر چه کلمات بیشتری داشته باشید، تست‌ها متنوع‌تر می‌شوند!`;
+        if (simpleWordsCount === 0) {
+            return `� **شما ${totalWords} کلمه در دیکشنری دارید اما هیچ‌کدام برای تست مناسب نیستند!**\n\n` +
+                   `🎯 کلمات موجود شما اکثراً جملات یا عبارات پیچیده هستند.\n\n` +
+                   `🔤 لطفاً کلمات ساده‌تری اضافه کنید:\n` +
+                   `• کلمات فارسی: خانه، کتاب، آب، غذا\n` +
+                   `• کلمات هلندی: huis، boek، water، eten\n\n` +
+                   `✨ کلمات ساده برای تست‌های بهتر استفاده می‌شوند!`;
         }
         
-        // Generate a simple word test from available vocabulary
+        if (simpleWordsCount < 3) {
+            return `📊 **شما ${totalWords} کلمه کل دارید، ${simpleWordsCount} مناسب تست**\n\n` +
+                   `🎯 برای ساخت تست، حداقل 3 کلمه ساده نیاز است.\n\n` +
+                   `🔤 کلمات ساده‌تری با دکمه **🌐 ترجمه** اضافه کنید:\n` +
+                   `• کلمات کوتاه (1-2 کلمه)\n` +
+                   `• بدون نقطه‌گذاری یا جملات طولانی\n\n` +
+                   `✨ هر چه کلمات ساده‌تری داشته باشید، تست‌ها بهتر می‌شوند!`;
+        }
+        
+        console.log(`📊 Test generation: ${simpleWordsCount} simple words available from ${totalWords} total words`);
+        
+        // Generate a simple word test from available simple vocabulary
         const test = await generateWordTest(chatId);
         if (!test) {
             return 'خطایی در ساخت تست پیش آمد. لطفاً دوباره تلاش کنید.';
